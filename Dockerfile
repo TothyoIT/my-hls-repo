@@ -1,4 +1,3 @@
-# Dockerfile
 FROM ubuntu:22.04
 
 # Install FFmpeg
@@ -8,11 +7,10 @@ RUN apt-get update && \
     && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /work
-
-# Copy the repack script and player HTML into the image
+# Copy script and player HTML
 COPY repack.sh /work/repack.sh
 COPY index.html /work/index.html
 RUN chmod +x /work/repack.sh
 
-# Run the repack script on container start
+# Run script via bash to avoid exec format errors
 ENTRYPOINT ["bash", "/work/repack.sh"]

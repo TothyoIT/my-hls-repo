@@ -1,36 +1,41 @@
-# .github/workflows/hls.yml
-name: HLS Repack & Deploy to docs
+name: HLS Repack & Deploy to GitHub Pages
 
 on:
   schedule:
-    - cron: '*/1 * * * *'
+    - cron: '*/1 * * * *'      # প্রতি মিনিটে রান
   workflow_dispatch: {}
 
 jobs:
-  repack:
+  build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout repo
-        uses: actions/checkout@v3
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
+    - name: Checkout repo
+      uses: actions/checkout@v3
+      with:
+        fetch-depth: 0
+        token: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build Docker image
-        run: |
-          docker build -t hls-repack .
+    - name: Build Docker image
+      run: |
+        docker build -t hls-repack .
 
-      - name: Run Docker container
-        run: |
-          docker run --rm -v "${{ github.workspace }}":/work hls-repack
+    - name: Run Docker container to repack HLS
+      run: |
+        docker run --rm -v "${{ github.workspace }}":/work hls-repack
 
-      - name: Commit & push docs/
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "github-actions[bot]@users.noreply.github.com"
+    - name: Ensure .nojekyll in docs/
+      run: |
+        # copy the root .nojekyll into docs/, so Pages ignores Jekyll here too
+        cp .nojekyll docs/.nojekyll
 
-          git add docs
-          git commit -m "Auto-update HLS output $(date -u +"%Y-%m-%dT%H:%M:%SZ")" || echo "No changes to commit"
-          git push
+    - name: Configure GitHub Pages
+      uses: actions/configure-pages@v3
+
+    - name: Upload docs folder
+      uses: actions/upload-pages-artifact@v1
+      with:
+        path: docs
+
+    - name: Deploy to GitHub Pages
+      uses: actions/deploy-pages@v1

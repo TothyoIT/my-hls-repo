@@ -2,7 +2,7 @@ name: HLS Repack & Deploy to GitHub Pages
 
 on:
   schedule:
-    - cron: '*/1 * * * *'      # প্রতি মিনিটে রান
+    - cron: '*/1 * * * *'
   workflow_dispatch: {}
 
 jobs:
@@ -10,32 +10,28 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout repo
-      uses: actions/checkout@v3
-      with:
-        fetch-depth: 0
-        token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Checkout repo
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
 
-    - name: Build Docker image
-      run: |
-        docker build -t hls-repack .
+      - name: Build Docker image
+        run: docker build -t hls-repack .
 
-    - name: Run Docker container to repack HLS
-      run: |
-        docker run --rm -v "${{ github.workspace }}":/work hls-repack
+      - name: Run Docker container to repack HLS
+        run: docker run --rm -v "${{ github.workspace }}":/work hls-repack
 
-    - name: Ensure .nojekyll in docs/
-      run: |
-        # copy the root .nojekyll into docs/, so Pages ignores Jekyll here too
-        cp .nojekyll docs/.nojekyll
+      - name: Copy .nojekyll into docs/
+        run: cp .nojekyll docs/.nojekyll
 
-    - name: Configure GitHub Pages
-      uses: actions/configure-pages@v3
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v3
 
-    - name: Upload docs folder
-      uses: actions/upload-pages-artifact@v1
-      with:
-        path: docs
+      - name: Upload docs folder
+        uses: actions/upload-pages-artifact@v1
+        with:
+          path: docs
 
-    - name: Deploy to GitHub Pages
-      uses: actions/deploy-pages@v1
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v1
